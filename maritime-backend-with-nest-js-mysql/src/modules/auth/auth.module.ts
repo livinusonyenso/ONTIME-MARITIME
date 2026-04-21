@@ -7,6 +7,7 @@ import { JwtStrategy } from './jwt.strategy'
 import { UsersModule } from '../users/users.module'
 import { KycModule } from '../kyc/kyc.module'
 import { PrismaModule } from '../../prisma/prisma.module'
+import { NotificationsModule } from '../notifications/notifications.module'
 
 import { ConfigModule, ConfigService } from '@nestjs/config'
 
@@ -17,13 +18,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET') || 'ontime-secret-key',
-        signOptions: { expiresIn: '24h' },
+        signOptions: { expiresIn: '15m' },
       }),
       inject: [ConfigService],
     }),
     UsersModule,
     KycModule,
     PrismaModule,
+    NotificationsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
+import { CacheModule } from '@nestjs/cache-manager'
+import * as redisStore from 'cache-manager-redis-store'
 
 import { PassportModule } from '@nestjs/passport'
 import { PrismaModule } from './prisma/prisma.module'
@@ -18,8 +23,17 @@ import { AdminModule } from './modules/admin/admin.module'
 import { RatingsModule } from './modules/ratings/ratings.module'
 import { ArbitrationModule } from './modules/arbitration/arbitration.module'
 import { InsuranceModule } from './modules/insurance/insurance.module'
+import { VesselsModule } from './modules/vessels/vessels.module'
+import { BolModule } from './modules/bol/bol.module'
+import { DisputesModule } from './modules/disputes/disputes.module'
+import { SecurityModule } from './modules/security/security.module'
+import { LegalModule } from './modules/legal/legal.module'
+import { KnowledgeModule }   from './modules/knowledge/knowledge.module'
+import { MarketplaceModule } from './modules/marketplace/marketplace.module'
+import { PaymentsModule } from './modules/payments/payments.module'
 
 import { AppController } from './app.controller'
+import { UploadModule }  from './modules/upload/upload.module'
 
 @Module({
   imports: [
@@ -27,6 +41,18 @@ import { AppController } from './app.controller'
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([
+      { ttl: 60_000, limit: 60 }, // 60 req / minute global default
+    ]),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: () => ({
+        store: redisStore,
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        ttl: 60,
+      }),
+    }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     PassportModule,
 
@@ -44,7 +70,19 @@ import { AppController } from './app.controller'
     RatingsModule,
     ArbitrationModule,
     InsuranceModule,
+    UploadModule,
+    VesselsModule,
+    BolModule,
+    DisputesModule,
+    SecurityModule,
+    LegalModule,
+    KnowledgeModule,
+    MarketplaceModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

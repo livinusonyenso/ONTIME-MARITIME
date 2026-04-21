@@ -1,14 +1,21 @@
-import { Link } from "react-router-dom"
-import { Ship } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
 
 export function SidebarHeader() {
+  const location = useLocation()
+
+  // Determine dashboard home based on current route
+  const dashboardPath = location.pathname.startsWith("/admin")
+    ? "/admin"
+    : location.pathname.startsWith("/dashboard/seller")
+      ? "/dashboard/seller"
+      : location.pathname.startsWith("/dashboard/organization")
+        ? "/dashboard/organization"
+        : "/dashboard/buyer"
+
   return (
-    <div className="flex h-16 items-center px-6 border-b">
-      <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-        <div className="bg-primary p-1.5 rounded-md">
-          <Ship className="h-5 w-5 text-primary-foreground" />
-        </div>
-        ONTIME MARITIME
+    <div className="flex h-16 items-center px-6 border-b overflow-hidden">
+      <Link to={dashboardPath} className="flex items-center gap-2">
+        <img src="/logo.png" alt="Ontime Maritime" className="h-8 w-auto" />
       </Link>
     </div>
   )

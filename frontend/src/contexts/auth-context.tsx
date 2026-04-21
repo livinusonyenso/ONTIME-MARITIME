@@ -3,8 +3,10 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react"
+import { useNavigate } from "react-router-dom"
 import api from "../lib/api"
 import type { User } from "../types"
 
@@ -18,9 +20,11 @@ interface AuthContextType {
     email: string,
     phone: string,
     password: string,
-    role: "buyer" | "seller"
-  ) => Promise<void>
-  verifyOtp: (userId: string, otp: string) => Promise<void>
+    role: "buyer" | "seller" | "organization",
+    orgFields?: { company_name?: string; business_address?: string; website?: string }
+  ) => Promise<string>
+  verifyOtp: (pendingId: string, otp: string) => Promise<void>
+  resendOtp: (email: string) => Promise<{ pendingId?: string; message: string }>
   login: (email: string, password: string) => Promise<User>
   logout: () => void
   refreshProfile: () => Promise<void>
@@ -33,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   /* ------------------ INIT FROM STORAGE ------------------ */
   useEffect(() => {
@@ -47,13 +52,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
+  /* ------------------ SESSION EXPIRY (from 401 interceptor) ------------------ */
+  const handleSessionExpired = useCallback((e: Event) => {
+    const isAdmin = (e as CustomEvent).detail?.isAdmin ?? false
+    setUser(null)
+    setToken(null)
+    navigate(isAdmin ? "/admin/login" : "/login", { replace: true })
+  }, [navigate])
+
+  /* ------------------ SILENT REFRESH (from 401 interceptor) ----------------- */
+  // When the axios interceptor silently refreshes the access token it fires this
+  // event so React state stays in sync without a full re-login.
+  const handleTokenRefreshed = useCallback((e: Event) => {
+    const newToken: string = (e as CustomEvent).detail?.token
+    if (newToken) {
+      setToken(newToken)
+      localStorage.setItem("ontime_token", newToken)
+    }
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener("auth:session-expired", handleSessionExpired)
+    window.addEventListener("auth:token-refreshed", handleTokenRefreshed)
+    return () => {
+      window.removeEventListener("auth:session-expired", handleSessionExpired)
+      window.removeEventListener("auth:token-refreshed", handleTokenRefreshed)
+    }
+  }, [handleSessionExpired, handleTokenRefreshed])
+
   /* ------------------ SIGNUP ------------------ */
   const signup = async (
     email: string,
     phone: string,
     password: string,
-    role: "buyer" | "seller"
-  ) => {
+    role: "buyer" | "seller" | "organization",
+    orgFields?: { company_name?: string; business_address?: string; website?: string }
+  ): Promise<string> => {
     try {
       setLoading(true)
       setError(null)
@@ -63,22 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone,
         password,
         role,
+        ...orgFields,
       })
 
       /**
-       * EXPECTED BACKEND RESPONSE:
-       * {
-       *   access_token: string,
-       *   user: User
-       * }
+       * BACKEND RESPONSE: { pendingId: string, message: string }
+       * No account exists yet — only a PendingRegistration record.
+       * Token/user are set only after OTP verification.
        */
-      const { access_token, user: newUser } = response.data
-
-      setToken(access_token)
-      setUser(newUser)
-
-      localStorage.setItem("ontime_token", access_token)
-      localStorage.setItem("ontime_user", JSON.stringify(newUser))
+      return response.data.pendingId as string
     } catch (err: any) {
       setError(err.message || "Signup failed")
       throw err
@@ -88,22 +115,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   /* ------------------ VERIFY OTP ------------------ */
-  const verifyOtp = async (userId: string, otp: string) => {
+  const verifyOtp = async (pendingId: string, otp: string) => {
     try {
       setLoading(true)
       setError(null)
 
       const response = await api.post("/auth/verify-otp", {
-        userId,
+        pendingId,
         otp,
       })
 
       /**
-       * EXPECTED BACKEND RESPONSE:
-       * {
-       *   access_token: string,
-       *   user: User
-       * }
+       * BACKEND RESPONSE: { access_token: string, user: User }
+       * Account is created here for the first time.
        */
       const { access_token, user: verifiedUser } = response.data
 
@@ -114,6 +138,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("ontime_user", JSON.stringify(verifiedUser))
     } catch (err: any) {
       setError(err.message || "OTP verification failed")
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  /* ------------------ RESEND OTP ------------------ */
+  const resendOtp = async (email: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await api.post("/auth/resend-otp", { email })
+      return response.data as { pendingId?: string; message: string }
+    } catch (err: any) {
+      setError(err.message || "Failed to resend OTP")
       throw err
     } finally {
       setLoading(false)
@@ -141,36 +181,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return loggedInUser
     } catch (err: any) {
-      // Demo fallback – when backend is unavailable, allow demo logins
-      const demoRole = email.toLowerCase().includes("admin")
-        ? "admin"
-        : email.toLowerCase().includes("seller")
-          ? "seller"
-          : "buyer"
-
-      const demoUser: User = {
-        id: "demo-" + demoRole,
-        role: demoRole as User["role"],
-        email,
-        phone: "+1000000000",
-        is_phone_verified: true,
-        is_email_verified: true,
-        subscription_status: "enterprise",
-        subscription_expiry: null,
-        first_name: demoRole === "admin" ? "Admin" : demoRole === "seller" ? "Seller" : "Buyer",
-        last_name: "Demo",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-      const demoToken = "demo-token-" + demoRole
-
-      setToken(demoToken)
-      setUser(demoUser)
-
-      localStorage.setItem("ontime_token", demoToken)
-      localStorage.setItem("ontime_user", JSON.stringify(demoUser))
-
-      return demoUser
+      const errorMessage = err.message || "Login failed. Please check your credentials."
+      setError(errorMessage)
+      throw err
     } finally {
       setLoading(false)
     }
@@ -180,9 +193,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     setToken(null)
-
     localStorage.removeItem("ontime_token")
     localStorage.removeItem("ontime_user")
+    // Clear the httpOnly refresh cookie via the backend (fire-and-forget)
+    api.post("/auth/logout").catch(() => {/* ignore — local state is already cleared */})
   }
 
   /* ------------------ REFRESH PROFILE ------------------ */
@@ -215,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         signup,
         verifyOtp,
+        resendOtp,
         login,
         logout,
         refreshProfile,

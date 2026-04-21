@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { selectSellerListings, deleteSellerListing } from "@/store/slices/sellerListingSlice"
+import { selectSellerListings, selectSellerListingsLoading, selectSellerSubmitting, deleteListing, fetchSellerListings } from "@/store/slices/sellerListingSlice"
 import type { MarketplaceListing } from "@/types/maritime"
 import { useAuth } from "@/contexts/auth-context"
-import { Package } from "lucide-react"
+import { Package, Loader2, AlertCircle } from "lucide-react"
 import { EditListingModal } from "./EditListingModal"
 import { SellerListingCard } from "./SellerListingCard"
 import {
@@ -22,16 +22,35 @@ import {
 export function SellerListingsView() {
   const dispatch = useDispatch()
   const { user } = useAuth()
-  const myListings = useSelector(selectSellerListings)
-  
-  const [editingListing, setEditingListing] = useState<MarketplaceListing | null>(null)
-  const [deletingListingId, setDeletingListingId] = useState<string | null>(null)
+  const myListings  = useSelector(selectSellerListings)
+  const loading     = useSelector(selectSellerListingsLoading)
+  const submitting  = useSelector(selectSellerSubmitting)
 
-  const handleDelete = () => {
-    if (deletingListingId) {
-      dispatch(deleteSellerListing(deletingListingId))
+  const [editingListing, setEditingListing]     = useState<MarketplaceListing | null>(null)
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError]             = useState<string | null>(null)
+
+  useEffect(() => {
+    dispatch(fetchSellerListings() as any)
+  }, [dispatch])
+
+  const handleDelete = async () => {
+    if (!deletingListingId) return
+    setDeleteError(null)
+    const result = await (dispatch as any)(deleteListing(deletingListingId))
+    if (deleteListing.fulfilled.match(result)) {
       setDeletingListingId(null)
+    } else {
+      setDeleteError((result.payload as string) ?? "Failed to delete listing")
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   if (myListings.length === 0) {
@@ -69,7 +88,7 @@ export function SellerListingsView() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingListingId} onOpenChange={() => setDeletingListingId(null)}>
+      <AlertDialog open={!!deletingListingId} onOpenChange={() => { setDeletingListingId(null); setDeleteError(null) }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Listing</AlertDialogTitle>
@@ -77,10 +96,19 @@ export function SellerListingsView() {
               Are you sure you want to delete this listing? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteError && (
+            <div className="flex items-center gap-2 rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {deleteError}
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={submitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Deleting...</> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

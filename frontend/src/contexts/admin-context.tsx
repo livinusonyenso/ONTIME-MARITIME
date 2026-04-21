@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import api from '../lib/api'
-import type { DashboardStats, User, KYC, AuditLog } from '../types'
+import type { DashboardStats, User, KYC, KycStats, AdminListing, ListingStats, AuditLog } from '../types'
 
 interface UserStats {
   totalUsers: number
@@ -13,6 +13,7 @@ interface AdminContextType {
   users: User[]
   userStats: UserStats | null
   pendingKyc: KYC[]
+  kycStats: KycStats | null
   auditLogs: AuditLog[]
   loading: boolean
   error: string | null
@@ -25,9 +26,20 @@ interface AdminContextType {
   suspendUser: (id: string, reason: string) => Promise<User>
   deleteUser: (id: string, reason: string) => Promise<void>
   getPendingKyc: (skip?: number, take?: number) => Promise<KYC[]>
+  getKycStats: () => Promise<KycStats>
+  getKycList: (status: string, skip?: number, take?: number) => Promise<KYC[]>
   approveKyc: (id: string, comment: string) => Promise<KYC>
   rejectKyc: (id: string, comment: string) => Promise<KYC>
-  getAuditLogs: (skip?: number, take?: number) => Promise<AuditLog[]>
+  getAuditLogs: (params?: {
+    module?: string; action?: string; actorId?: string
+    dateFrom?: string; dateTo?: string; skip?: number; take?: number
+  }) => Promise<{ data: AuditLog[]; total: number }>
+  // Listing approval
+  listingStats: ListingStats | null
+  getListingStats: () => Promise<ListingStats>
+  getListingsByStatus: (status: string, skip?: number, take?: number) => Promise<AdminListing[]>
+  approveListing: (id: string) => Promise<AdminListing>
+  rejectListing: (id: string, reason: string) => Promise<AdminListing>
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
@@ -37,6 +49,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([])
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [pendingKyc, setPendingKyc] = useState<KYC[]>([])
+  const [kycStats, setKycStats] = useState<KycStats | null>(null)
+  const [listingStats, setListingStats] = useState<ListingStats | null>(null)
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -220,6 +234,38 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const getKycStats = useCallback(async (): Promise<KycStats> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get('/admin/kyc/stats')
+      const data: KycStats = response.data
+      setKycStats(data)
+      return data
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to fetch KYC stats'
+      setError(errorMessage)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const getKycList = useCallback(async (status: string, skip = 0, take = 20): Promise<KYC[]> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get('/admin/kyc/list', { params: { status, skip, take } })
+      return response.data as KYC[]
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to fetch KYC list'
+      setError(errorMessage)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   const approveKyc = useCallback(async (id: string, comment: string): Promise<KYC> => {
     try {
       setLoading(true)
@@ -258,18 +304,77 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const getAuditLogs = useCallback(async (skip = 0, take = 20): Promise<AuditLog[]> => {
+  const getListingStats = useCallback(async (): Promise<ListingStats> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get('/admin/listings/stats')
+      const data: ListingStats = response.data
+      setListingStats(data)
+      return data
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch listing stats')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const getListingsByStatus = useCallback(async (status: string, skip = 0, take = 20): Promise<AdminListing[]> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get(`/admin/listings/status/${status}`, { params: { skip, take } })
+      return response.data as AdminListing[]
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch listings')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const approveListing = useCallback(async (id: string): Promise<AdminListing> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.post(`/admin/listings/${id}/approve`)
+      return response.data as AdminListing
+    } catch (err: any) {
+      setError(err.message || 'Failed to approve listing')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const rejectListing = useCallback(async (id: string, reason: string): Promise<AdminListing> => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.post(`/admin/listings/${id}/reject`, { reason })
+      return response.data as AdminListing
+    } catch (err: any) {
+      setError(err.message || 'Failed to reject listing')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const getAuditLogs = useCallback(async (params?: {
+    module?: string; action?: string; actorId?: string
+    dateFrom?: string; dateTo?: string; skip?: number; take?: number
+  }): Promise<{ data: AuditLog[]; total: number }> => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await api.get('/admin/audit-logs', {
-        params: { skip, take },
-      })
-      const data = response.data
+      const response = await api.get('/admin/audit-logs', { params: { take: 50, ...params } })
+      const result: { data: AuditLog[]; total: number } = response.data
 
-      setAuditLogs(data)
-      return data
+      setAuditLogs(result.data)
+      return result
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to fetch audit logs'
       setError(errorMessage)
@@ -286,6 +391,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         users,
         userStats,
         pendingKyc,
+        kycStats,
         auditLogs,
         loading,
         error,
@@ -298,9 +404,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         suspendUser,
         deleteUser,
         getPendingKyc,
+        getKycStats,
+        getKycList,
         approveKyc,
         rejectKyc,
         getAuditLogs,
+        listingStats,
+        getListingStats,
+        getListingsByStatus,
+        approveListing,
+        rejectListing,
       }}
     >
       {children}

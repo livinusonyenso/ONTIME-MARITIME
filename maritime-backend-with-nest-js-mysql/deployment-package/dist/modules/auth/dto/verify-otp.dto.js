@@ -17,7 +17,7 @@ exports.VerifyOtpDto = VerifyOtpDto;
 __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], VerifyOtpDto.prototype, "userId", void 0);
+], VerifyOtpDto.prototype, "pendingId", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

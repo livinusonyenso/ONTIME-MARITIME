@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -10,60 +10,104 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
-import { Ship, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react"
+import { Ship, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, MailWarning, ShieldAlert } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import api from "@/lib/api"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { login } = useAuth()
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [lockUntil, setLockUntil] = useState<Date | null>(null)
+  const [countdown, setCountdown] = useState("")
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const { login, resendOtp } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!lockUntil) { setCountdown(""); return }
+
+    const tick = () => {
+      const diff = lockUntil.getTime() - Date.now()
+      if (diff <= 0) {
+        setLockUntil(null)
+        setCountdown("")
+        if (countdownRef.current) clearInterval(countdownRef.current)
+        return
+      }
+      const m = Math.floor(diff / 60_000)
+      const s = Math.floor((diff % 60_000) / 1000)
+      setCountdown(`${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`)
+    }
+
+    tick()
+    countdownRef.current = setInterval(tick, 1000)
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [lockUntil])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setUnverifiedEmail(null)
 
     try {
-      await login(email, password)
+      const user = await login(email, password)
       toast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
       })
 
-      const storedUser = localStorage.getItem("ontime_user")
-      if (storedUser) {
-        const user = JSON.parse(storedUser)
-        if (user.role === "buyer") {
-          navigate("/dashboard/buyer")
-        } else if (user.role === "seller") {
-          navigate("/dashboard/seller")
-        } else if (user.role === "executive") {
-          navigate("/dashboard/executive")
-        } else if (user.role === "admin") {
-          navigate("/admin")
-        } else {
-          navigate("/dashboard")
-        }
+      if (user.role === "buyer") navigate("/dashboard/buyer")
+      else if (user.role === "seller") navigate("/dashboard/seller")
+      else if (user.role === "organization") navigate("/dashboard/organization")
+      else if (user.role === "executive") navigate("/dashboard/executive")
+      else if (user.role === "admin") navigate("/admin")
+      else navigate("/dashboard/buyer")
+    } catch (err: any) {
+      // err.data comes from the api.ts interceptor rejection shape
+      const code = err?.data?.code
+      if (code === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(err?.data?.email || email)
+      } else if (code === "ACCOUNT_LOCKED") {
+        const until = err?.data?.lock_until ? new Date(err.data.lock_until) : new Date(Date.now() + 15 * 60_000)
+        setLockUntil(until)
       } else {
-        navigate("/dashboard")
+        setError(err.message || "Invalid email or password. Please try again.")
       }
-    } catch (error: any) {
-      setError(error.message || "Invalid email or password. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setResending(true)
+
+    try {
+      // For users already in the users table (is_email_verified=false),
+      // send a magic link instead of an OTP code.
+      await api.post("/auth/resend-email-verification", { email: unverifiedEmail })
       toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
+        title: "Verification email sent!",
+        description: "Check your inbox for a verification link. It expires in 24 hours.",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to resend",
+        description: err?.data?.message || err.message || "Please try again.",
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setResending(false)
     }
   }
 
@@ -81,7 +125,7 @@ export default function LoginPage() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg leading-none">ONTIME MARITIME</span>
-                <span className="text-xs text-muted-foreground">Tech Meet Cargo</span>
+                <span className="text-xs text-muted-foreground">Cargo Meet Tech</span>
               </div>
             </div>
 
@@ -89,6 +133,44 @@ export default function LoginPage() {
               <h1 className="text-3xl font-bold">Welcome back</h1>
               <p className="text-muted-foreground mt-2">Sign in to your account to continue</p>
             </div>
+
+            {/* Account locked banner with countdown */}
+            {lockUntil && (
+              <Alert className="border-red-300 bg-red-50 dark:bg-red-950/20">
+                <ShieldAlert className="h-4 w-4 text-red-600" />
+                <AlertTitle className="text-red-800 dark:text-red-400">Account Locked</AlertTitle>
+                <AlertDescription className="text-red-700 dark:text-red-300">
+                  Too many failed attempts. You can try again in{" "}
+                  <span className="font-mono font-bold text-red-800 dark:text-red-300">{countdown}</span>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Unverified email persistent banner */}
+            {unverifiedEmail && (
+              <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/20">
+                <MailWarning className="h-4 w-4 text-orange-600" />
+                <AlertTitle className="text-orange-800 dark:text-orange-400">
+                  Email not verified
+                </AlertTitle>
+                <AlertDescription className="text-orange-700 dark:text-orange-300 space-y-3">
+                  <p>
+                    Your email address{" "}
+                    <span className="font-medium">{unverifiedEmail}</span> is not
+                    verified. You must verify your email to access the platform.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-400 text-orange-700 hover:bg-orange-100 dark:text-orange-300"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                  >
+                    {resending ? "Sending…" : "Resend Verification Email"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Card className="glass border-2">
               <CardContent className="p-6">
@@ -145,13 +227,13 @@ export default function LoginPage() {
                       <input type="checkbox" className="rounded" />
                       <span>Remember me</span>
                     </label>
-                    <Link to="#" className="text-primary hover:underline">
+                    <Link to="/forgot-password" className="text-primary hover:underline">
                       Forgot password?
                     </Link>
                   </div>
 
-                  <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign in"}
+                  <Button type="submit" className="w-full" size="lg" disabled={loading || !!lockUntil}>
+                    {loading ? "Signing in..." : lockUntil ? `Locked (${countdown})` : "Sign in"}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </form>
@@ -164,8 +246,6 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
-
-            <p className="text-center text-xs text-muted-foreground">Demo: Use any email (add "admin" for admin role)</p>
           </div>
         </div>
 

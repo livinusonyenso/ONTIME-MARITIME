@@ -9,6 +9,12 @@ import AboutPage from "./pages/entry/AboutPage"
 import LoginPage from "./pages/entry/LoginPage"
 import AdminLoginPage from "./pages/entry/AdminLoginPage"
 import RegisterPage from "./pages/entry/RegisterPage"
+import VerifyOtpPage from "./pages/entry/VerifyOtpPage"
+import WelcomePage from "./pages/entry/WelcomePage"
+import ForgotPasswordPage from "./pages/entry/ForgotPasswordPage"
+import VerifyResetOtpPage from "./pages/entry/VerifyResetOtpPage"
+import ResetPasswordPage from "./pages/entry/ResetPasswordPage"
+import VerifyEmailPage from "./pages/entry/VerifyEmailPage"
 import ServicesPage from "./pages/entry/ServicesPage"
 import OntimeStorePage from "./pages/entry/OntimeStorePage"
 import ProductDetailPage from "./pages/entry/ProductDetailPage"
@@ -20,6 +26,8 @@ import LegalHubPage from "./pages/features/LegalHubPage"
 import SecurityHotlinePage from "./pages/features/SecurityHotlinePage"
 import ArbitrationPage from "./pages/features/ArbitrationPage"
 import MarketplacePage from "./pages/features/MarketplacePage"
+import MarketplaceListingDetailPage from "./pages/features/MarketplaceListingDetailPage"
+import PaymentCallbackPage from "./pages/features/PaymentCallbackPage"
 import KnowledgePage from "./pages/features/KnowledgePage"
 
 // Feature Views
@@ -49,6 +57,11 @@ import SellerDocumentsPage from "./dashboard/seller/Documents/DocumentsPage"
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage"
 import SellerMarketPage from "./pages/seller/MarketPage"
 import SellerListingsPage from "./pages/seller/ListingsPage"
+import KYCSubmissionPage from "./pages/seller/KYCSubmissionPage"
+
+// Organization Pages
+import OrganizationDashboardPage from "./pages/organization/OrganizationDashboardPage"
+import OrganizationProfilePage from "./pages/organization/OrganizationProfilePage"
 
 // Executive Corner Pages
 import ExecutiveDashboardPage from "./pages/executive-corner/ExecutiveDashboardPage"
@@ -59,6 +72,7 @@ import AdminDocumentsPage from "./pages/executive-corner/AdminDocumentsPage"
 import AdminInsurancePage from "./pages/executive-corner/AdminInsurancePage"
 import AdminAnalyticsPage from "./pages/executive-corner/AdminAnalyticsPage"
 import AdminKYCPage from "./pages/executive-corner/AdminKYCPage"
+import AdminListingsApprovalPage from "./pages/executive-corner/AdminListingsApprovalPage"
 import AdminAuditLogsPage from "./pages/executive-corner/AdminAuditLogsPage"
 import AdminSettingsPage from "./pages/executive-corner/AdminSettingsPage"
 import MaritimeSalesAdmin from "./pages/seller/MaritimeSalesAdmin"
@@ -79,6 +93,12 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/welcome" element={<WelcomePage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/forgot-password/verify" element={<VerifyResetOtpPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password/reset" element={<ResetPasswordPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/store" element={<OntimeStorePage />} />
         <Route path="/store/product/:productId" element={<ProductDetailPage />} />
@@ -90,6 +110,8 @@ function App() {
         <Route path="/security-hotline" element={<SecurityHotlinePage />} />
         <Route path="/arbitration" element={<ArbitrationPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/marketplace/:id" element={<MarketplaceListingDetailPage />} />
+        <Route path="/payment/callback" element={<PaymentCallbackPage />} />
         <Route path="/knowledge" element={<KnowledgePage />} />
 
         {/* Legacy public routes */}
@@ -106,8 +128,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<BuyerMarketPage />} />
-          <Route path="overview" element={<BuyerDashboardPage />} />
+          <Route index element={<BuyerDashboardPage />} />
+          <Route path="overview" element={<BuyerMarketPage />} />
           <Route path="tracking" element={<BuyerTrackingPage />} />
           <Route path="auctions" element={<BuyerAuctionsPage />} />
           <Route path="insurance" element={<BuyersInsurance />} />
@@ -127,7 +149,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<SellerMarketPage />} />
+          <Route index element={<SellerDashboardPage />} />
           <Route path="overview" element={<SellerDashboardPage />} />
           <Route path="listings" element={<SellerListingsPage />} />
           <Route path="insurance" element={<UserInsuranceDashboard/>} />
@@ -138,6 +160,27 @@ function App() {
           <Route path="ebol" element={<SellerEBOLPage />} />
           <Route path="arbitration" element={<SellerArbitrationPage />} />
           <Route path="security-hotline" element={<UserSecurityHotlineDashboard/>} />
+          <Route path="kyc" element={<KYCSubmissionPage />} />
+        </Route>
+
+        {/* Organization Dashboard Routes */}
+        <Route
+          path="/dashboard/organization"
+          element={
+            <ProtectedRoute allowedRoles={["organization"]}>
+              <DashboardLayout role="organization" />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<OrganizationDashboardPage />} />
+          <Route path="listings" element={<SellerListingsPage />} />
+          <Route path="sales" element={<MaritimeSalesAdmin />} />
+          <Route path="ebol" element={<SellerEBOLPage />} />
+          <Route path="arbitration" element={<SellerArbitrationPage />} />
+          <Route path="security-hotline" element={<UserSecurityHotlineDashboard />} />
+          <Route path="tracking" element={<TrackingUserDashboard />} />
+          <Route path="documents" element={<UserDocumentsDashboard />} />
+          <Route path="profile" element={<OrganizationProfilePage />} />
         </Route>
 
         {/* Executive Dashboard Routes */}
@@ -166,6 +209,7 @@ function App() {
           <Route path="documents" element={<AdminDocumentsPage />} />
           <Route path="insurance" element={<AdminInsurancePage />} />
           <Route path="kyc" element={<AdminKYCPage />} />
+          <Route path="listings" element={<AdminListingsApprovalPage />} />
           <Route path="audit-logs" element={<AdminAuditLogsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>

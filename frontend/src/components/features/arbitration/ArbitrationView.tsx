@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import {
+  fetchDisputes,
   addDispute,
   selectDispute,
   clearSelectedDispute,
@@ -96,6 +97,11 @@ export interface Dispute {
 export default function ArbitrationView() {
   const dispatch = useAppDispatch()
   const { disputes, selectedDispute, aiAnalysisInProgress } = useAppSelector((state) => state.arbitration)
+
+  useEffect(() => {
+    if (disputes.length === 0) dispatch(fetchDisputes())
+  }, [dispatch])
+
   const [activeTab, setActiveTab] = useState<"overview" | "pending" | "resolved">("overview")
   const [showNewDisputeDialog, setShowNewDisputeDialog] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -198,7 +204,7 @@ export default function ArbitrationView() {
               <span className="text-sm font-medium">Powered by Grok 4.1</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              AI Arbitration &amp; Dispute Resolution
+              Marine Arbitration &amp; Dispute Resolution
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
               Intelligent dispute resolution for maritime issues including shipment delays,

@@ -1,7 +1,7 @@
 // User Types
 export interface User {
   id: string
-  role: 'buyer' | 'seller' | 'admin' | 'executive' | 'expert'
+  role: 'buyer' | 'seller' | 'admin' | 'executive' | 'expert' | 'organization'
   email: string
   phone: string
   is_phone_verified: boolean
@@ -10,6 +10,9 @@ export interface User {
   subscription_expiry: string | null
   first_name: string | null
   last_name: string | null
+  company_name: string | null
+  business_address: string | null
+  website: string | null
   created_at: string
   updated_at: string
 }
@@ -18,20 +21,63 @@ export interface User {
 export interface KYC {
   id: string
   user_id: string
-  bvn: string
-  id_type: 'NIN' | 'passport' | 'drivers_license'
-  id_number: string
-  id_document_url: string
-  face_photo_url: string
+  bvn: string | null
+  id_type: 'NIN' | 'passport' | 'voter_card' | 'drivers_license' | null
+  id_number: string | null
+  id_document_url: string | null
+  face_photo_url: string | null
   status: 'pending' | 'approved' | 'rejected'
   admin_comment: string | null
   created_at: string
   updated_at: string
+  user?: { email: string; first_name?: string | null; last_name?: string | null }
+}
+
+export interface KycStats {
+  pending: number
+  approved: number
+  rejected: number
 }
 
 // Listing Types
 export type ListingCategory = 'cargo' | 'vessel' | 'container' | 'equipment'
-export type ListingStatus = 'active' | 'sold' | 'expired' | 'pending'
+export type ListingStatus = 'draft' | 'pending' | 'active' | 'sold' | 'archived' | 'rejected' | 'executive_review'
+
+export interface AdminListing {
+  id: string
+  title: string
+  description: string
+  status: ListingStatus
+  price_usd: number
+  currency: string
+  category: string
+  marketplace_category: string
+  condition: string
+  images: string[] | null
+  bol_image: string | null
+  bol_required: boolean
+  bol_verified: boolean
+  location: { city?: string; country?: string; port?: string } | null
+  rejection_reason: string | null
+  approved_at: string | null
+  rejected_at: string | null
+  created_at: string
+  updated_at: string
+  seller: {
+    id: string
+    email: string
+    first_name: string | null
+    last_name: string | null
+    company_name: string | null
+  } | null
+}
+
+export interface ListingStats {
+  pending: number
+  active: number
+  rejected: number
+  archived: number
+}
 
 export interface Listing {
   id: string
@@ -197,23 +243,39 @@ export interface InsurancePolicy {
 }
 
 // Admin Types
+
+export interface ActivityEntry {
+  id: string
+  action: string
+  module: string
+  actor_id: string | null
+  actor_name: string
+  details: Record<string, any> | null
+  timestamp: string
+}
+
 export interface DashboardStats {
   total_users: number
   total_listings: number
+  pending_listings: number
   total_transactions: number
   total_revenue: number
   pending_kyc: number
   active_auctions: number
+  recent_activity: ActivityEntry[]
 }
 
 export interface AuditLog {
-  id: string
-  user_id: string
-  action: string
-  entity_type: string
-  entity_id: string
-  details: Record<string, any>
-  created_at: string
+  id:          string
+  actor_id:    string | null
+  actor_email: string | null
+  action:      string
+  module:      string
+  target_id:   string | null
+  details:     Record<string, any> | null
+  ip_address:  string
+  user_agent:  string | null
+  timestamp:   string
 }
 
 // API Response Types

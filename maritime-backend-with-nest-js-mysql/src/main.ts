@@ -2,9 +2,31 @@ import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './app.module'
 import { SecurityMiddleware } from './common/middleware/security.middleware'
+import { json, urlencoded } from 'express'
+import helmet from 'helmet'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser = require('cookie-parser')
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  // Disable the default body parser so we can set our own size limits
+  const app = await NestFactory.create(AppModule, { bodyParser: false })
+
+  // Allow up to 50 MB for JSON bodies (base64 images / PDFs) and form data.
+  // The verify callback stores the raw body so the webhook endpoint can
+  // validate the Paystack x-paystack-signature header.
+  app.use(
+    json({
+      limit: '50mb',
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf.toString('utf8')
+      },
+    }),
+  )
+  app.use(urlencoded({ extended: true, limit: '50mb' }))
+  app.use(cookieParser())
+
+  // Security headers
+  app.use(helmet())
 
   // Enable CORS FIRST before any other middleware
   app.enableCors({
@@ -12,6 +34,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:5174',
+      'https://ontimemaritime.com',
+      'https://www.ontimemaritime.com',
       'https://ontime-maritime.onrender.com',
       'https://ontime-maritime-1.onrender.com',
       ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
