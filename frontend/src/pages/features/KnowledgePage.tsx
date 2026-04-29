@@ -15,7 +15,6 @@ import {
   setFilterType,
   setSearchQuery,
 } from "@/store/slices/knowledgeSlice"
-import { useAuth } from "@/contexts/auth-context"
 import {
   BookOpen,
   FileText,
