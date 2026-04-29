@@ -69,9 +69,8 @@ export class AuthService {
     })
   }
 
-  /* ------------------------------------------------------------------ */
-  /* SIGNUP                                                               */
-  /* ------------------------------------------------------------------ */
+  // ── SIGNUP ──────────────────────────────────────────────────────────────────
+
   async signup(signupDto: SignupDto) {
     const { email, phone, password, role, company_name, business_address, website } = signupDto
 
@@ -82,7 +81,6 @@ export class AuthService {
       throw new BadRequestException("An account with this email or phone already exists.")
     }
 
-    // Clean up any previous pending registrations for this email/phone
     await this.prisma.pendingRegistration.deleteMany({
       where: { OR: [{ email }, { phone }] },
     })
@@ -96,7 +94,7 @@ export class AuthService {
         phone,
         password_hash,
         role,
-        otp_code, // stored plain — temporary table, deleted after verification
+        otp_code,
         expires_at: new Date(Date.now() + 10 * 60 * 1000),
         company_name:     company_name     ?? null,
         business_address: business_address ?? null,
@@ -119,11 +117,9 @@ export class AuthService {
     return { pendingId: pending.id, message: "OTP sent to your email." }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* VERIFY OTP — creates user, issues both tokens                       */
-  /* ------------------------------------------------------------------ */
+  // ── VERIFY OTP ──────────────────────────────────────────────────────────────
+
   async verifyOtp(pendingId: string, otpCode: string, res: any) {
-    // Fetch pending record by ID first (no OTP in WHERE — compare manually below)
     const pending = await this.prisma.pendingRegistration.findUnique({
       where: { id: pendingId },
     })
@@ -132,13 +128,11 @@ export class AuthService {
       throw new BadRequestException("Invalid or expired OTP.")
     }
 
-    // Check expiry using UTC now to avoid timezone mismatch
     if (pending.expires_at < utcNow()) {
       await this.prisma.pendingRegistration.delete({ where: { id: pending.id } }).catch(() => {})
       throw new BadRequestException("OTP has expired. Please request a new one.")
     }
 
-    // Plain string comparison (OTP stored as plain text in pending_registration)
     if (pending.otp_code !== otpCode) {
       throw new BadRequestException("Invalid OTP. Please check the code and try again.")
     }
@@ -171,9 +165,8 @@ export class AuthService {
     return { access_token: accessToken, user: safe }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* LOGIN                                                                */
-  /* ------------------------------------------------------------------ */
+  // ── LOGIN ───────────────────────────────────────────────────────────────────
+
   private readonly MAX_FAILED_ATTEMPTS = 5
   private readonly LOCKOUT_MINUTES     = 15
 
@@ -197,7 +190,6 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials.")
     }
 
-    // Check account lock using UTC now
     if (user.lock_until && user.lock_until > utcNow()) {
       const minutesLeft = Math.ceil((user.lock_until.getTime() - Date.now()) / 60_000)
       throw new HttpException(
@@ -247,7 +239,6 @@ export class AuthService {
       )
     }
 
-    // Reset failed attempts on successful login
     if (user.failed_login_attempts > 0 || user.lock_until) {
       await this.prisma.user.update({
         where: { id: user.id },
@@ -263,9 +254,8 @@ export class AuthService {
     return { access_token: accessToken, user: safe }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* REFRESH — rotate tokens                                              */
-  /* ------------------------------------------------------------------ */
+  // ── REFRESH ─────────────────────────────────────────────────────────────────
+
   async refresh(cookieToken: string | undefined, res: any) {
     if (!cookieToken) throw new UnauthorizedException("No refresh token.")
 
@@ -303,9 +293,8 @@ export class AuthService {
     return { access_token: accessToken }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* LOGOUT                                                               */
-  /* ------------------------------------------------------------------ */
+  // ── LOGOUT ──────────────────────────────────────────────────────────────────
+
   async logout(userId: string, res: any) {
     await this.prisma.user.update({
       where: { id: userId },
@@ -315,14 +304,12 @@ export class AuthService {
     return { message: "Logged out successfully." }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* RESEND OTP                                                           */
-  /* ------------------------------------------------------------------ */
+  // ── RESEND OTP ──────────────────────────────────────────────────────────────
+
   async resendOtp(email: string) {
     const pending = await this.prisma.pendingRegistration.findUnique({ where: { email } })
 
     if (!pending) {
-      // Don't reveal whether the email exists
       return { message: "If a pending registration exists, a new OTP has been sent." }
     }
 
@@ -350,23 +337,25 @@ export class AuthService {
     return { pendingId: updated.id, message: "A new OTP has been sent to your email." }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* FORGOT PASSWORD                                                      */
-  /* ------------------------------------------------------------------ */
+  // ── FORGOT PASSWORD ─────────────────────────────────────────────────────────
+
   private readonly SAFE_RESET_RESPONSE = { message: "If the email exists, an OTP has been sent." }
 
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } })
     if (!user) return this.SAFE_RESET_RESPONSE
 
-    // Invalidate any existing unused OTPs for this email
     await this.prisma.otpToken.updateMany({
       where: { email, purpose: "password_reset", is_used: false },
       data: { is_used: true },
     })
 
-    const otp     = Math.floor(100000 + Math.random() * 900000).toString()
+    const otp      = Math.floor(100000 + Math.random() * 900000).toString()
     const otp_hash = await bcrypt.hash(otp, 10)
+
+    this.logger.log(
+      `forgotPassword — email=${email} otp_length=${otp.length} hash_prefix=${otp_hash.slice(0, 7)}`,
+    )
 
     await this.prisma.otpToken.create({
       data: {
@@ -380,7 +369,6 @@ export class AuthService {
 
     const sent = await this.mailService.sendPasswordResetEmail(email, otp)
     if (!sent) {
-      // Revoke the OTP we just created so it can't be guessed
       await this.prisma.otpToken.updateMany({
         where: { email, purpose: "password_reset", is_used: false },
         data: { is_used: true },
@@ -397,31 +385,53 @@ export class AuthService {
     return this.SAFE_RESET_RESPONSE
   }
 
-  /* ------------------------------------------------------------------ */
-  /* VERIFY RESET OTP                                                     */
-  /* ------------------------------------------------------------------ */
+  // ── VERIFY RESET OTP ────────────────────────────────────────────────────────
+
   async verifyResetOtp(email: string, otp: string) {
-    // Fetch the latest unused, non-expired OTP for this email
+    const cleanOtp = otp.trim()
+
+    this.logger.log(
+      `verifyResetOtp — email=${email} raw_length=${otp.length} clean_length=${cleanOtp.length}`,
+    )
+
     const token = await this.prisma.otpToken.findFirst({
       where: {
         email,
         purpose:    "password_reset",
         is_used:    false,
-        expires_at: { gt: utcNow() }, // UTC comparison — fixes timezone mismatch
+        expires_at: { gt: utcNow() },
       },
       orderBy: { created_at: "desc" },
     })
+
+    this.logger.log(
+      `verifyResetOtp — token_found=${!!token} expires_at=${token?.expires_at?.toISOString()} is_used=${token?.is_used}`,
+    )
 
     if (!token) {
       throw new BadRequestException("OTP has expired or was already used. Please request a new one.")
     }
 
-    const isValid = await bcrypt.compare(otp, token.otp_code)
+    const isBcryptHash = token.otp_code.startsWith("$2")
+    this.logger.log(
+      `verifyResetOtp — isBcryptHash=${isBcryptHash} hash_prefix=${token.otp_code.slice(0, 7)}`,
+    )
+
+    if (!isBcryptHash) {
+      this.logger.warn(
+        `verifyResetOtp: non-hashed otp_code found for ${email} (id=${token.id}) — revoking`,
+      )
+      await this.prisma.otpToken.update({ where: { id: token.id }, data: { is_used: true } })
+      throw new BadRequestException("OTP has expired or was already used. Please request a new one.")
+    }
+
+    const isValid = await bcrypt.compare(cleanOtp, token.otp_code)
+    this.logger.log(`verifyResetOtp — bcrypt.compare result=${isValid} email=${email}`)
+
     if (!isValid) {
       throw new BadRequestException("Invalid OTP. Please check the code and try again.")
     }
 
-    // Mark as used immediately so it can't be reused
     await this.prisma.otpToken.update({
       where: { id: token.id },
       data: { is_used: true },
@@ -435,9 +445,8 @@ export class AuthService {
     return { resetToken }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* RESET PASSWORD                                                       */
-  /* ------------------------------------------------------------------ */
+  // ── RESET PASSWORD ──────────────────────────────────────────────────────────
+
   async resetPassword(resetToken: string, newPassword: string) {
     let payload: { email: string; purpose: string }
 
@@ -460,24 +469,21 @@ export class AuthService {
     return { message: "Password reset successful." }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* RESEND EMAIL VERIFICATION (magic link for users already in DB)      */
-  /* ------------------------------------------------------------------ */
+  // ── RESEND EMAIL VERIFICATION ───────────────────────────────────────────────
+
   async resendEmailVerification(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } })
 
-    // Always return success to avoid email enumeration
     if (!user || user.is_email_verified) {
       return { message: "If your account exists and is unverified, a link has been sent." }
     }
 
-    // Invalidate any previous unused email-verification tokens
     await this.prisma.otpToken.updateMany({
       where: { email, purpose: "email_verification", is_used: false },
       data: { is_used: true },
     })
 
-    const rawToken  = randomBytes(32).toString("hex")       // 64-char hex
+    const rawToken  = randomBytes(32).toString("hex")
     const tokenHash = await bcrypt.hash(rawToken, 10)
 
     await this.prisma.otpToken.create({
@@ -486,7 +492,7 @@ export class AuthService {
         email,
         otp_code:   tokenHash,
         purpose:    "email_verification",
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 h
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     })
 
@@ -506,9 +512,8 @@ export class AuthService {
     return { message: "A verification link has been sent to your email." }
   }
 
-  /* ------------------------------------------------------------------ */
-  /* VERIFY EMAIL TOKEN (called when user clicks magic link)             */
-  /* ------------------------------------------------------------------ */
+  // ── VERIFY EMAIL TOKEN ──────────────────────────────────────────────────────
+
   async verifyEmailToken(email: string, rawToken: string) {
     const token = await this.prisma.otpToken.findFirst({
       where: {
