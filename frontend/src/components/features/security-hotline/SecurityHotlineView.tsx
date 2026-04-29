@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { fetchSecurityData, addReport, selectReport, clearSelectedReport, resetSubmissionSuccess } from "@/store/slices/securitySlice"
-import { useAuth } from "@/contexts/auth-context"
 import { useTranslation } from "react-i18next"
 import {
   Shield,
@@ -50,12 +49,11 @@ import {
 export function SecurityHotlineView() {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
-  const { isAuthenticated } = useAuth()
   const { reports, contacts, selectedReport, submissionSuccess } = useAppSelector((state) => state.security)
 
   useEffect(() => {
-    if (isAuthenticated && reports.length === 0) dispatch(fetchSecurityData())
-  }, [isAuthenticated, dispatch])
+    if (reports.length === 0) dispatch(fetchSecurityData())
+  }, [dispatch])
 
   const [activeTab, setActiveTab] = useState("report")
 
