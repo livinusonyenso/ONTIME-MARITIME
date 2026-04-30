@@ -350,18 +350,16 @@ export class AuthService {
       data: { is_used: true },
     })
 
-    const otp      = Math.floor(100000 + Math.random() * 900000).toString()
-    const otp_hash = await bcrypt.hash(otp, 10)
+    // Store OTP as plain text — bcrypt hashing caused comparison failures in production
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-    this.logger.log(
-      `forgotPassword — email=${email} otp_length=${otp.length} hash_prefix=${otp_hash.slice(0, 7)}`,
-    )
+    this.logger.log(`forgotPassword — email=${email} otp_length=${otp.length}`)
 
     await this.prisma.otpToken.create({
       data: {
         user_id:    user.id,
         email,
-        otp_code:   otp_hash,
+        otp_code:   otp,
         purpose:    "password_reset",
         expires_at: new Date(Date.now() + 10 * 60 * 1000),
       },
@@ -412,21 +410,9 @@ export class AuthService {
       throw new BadRequestException("OTP has expired or was already used. Please request a new one.")
     }
 
-    const isBcryptHash = token.otp_code.startsWith("$2")
-    this.logger.log(
-      `verifyResetOtp — isBcryptHash=${isBcryptHash} hash_prefix=${token.otp_code.slice(0, 7)}`,
-    )
-
-    if (!isBcryptHash) {
-      this.logger.warn(
-        `verifyResetOtp: non-hashed otp_code found for ${email} (id=${token.id}) — revoking`,
-      )
-      await this.prisma.otpToken.update({ where: { id: token.id }, data: { is_used: true } })
-      throw new BadRequestException("OTP has expired or was already used. Please request a new one.")
-    }
-
-    const isValid = await bcrypt.compare(cleanOtp, token.otp_code)
-    this.logger.log(`verifyResetOtp — bcrypt.compare result=${isValid} email=${email}`)
+    // Plain text comparison — matches how signup OTP verification works
+    const isValid = cleanOtp === token.otp_code
+    this.logger.log(`verifyResetOtp — match result=${isValid} email=${email}`)
 
     if (!isValid) {
       throw new BadRequestException("Invalid OTP. Please check the code and try again.")
