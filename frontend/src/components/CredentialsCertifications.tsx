@@ -85,7 +85,7 @@ function StatusWidget({ compact = false }: { compact?: boolean }) {
           <p className="font-black mt-0.5" style={{ color: C.forest }}>{LICENCE.number}</p>
         </div>
         <div>
-          <p className="font-semibold text-gray-400 uppercase tracking-wide text-[10px]">{t("credentials.widget.issuingBody")}</p>
+          <p className="font-semibold text-gray-400 uppercase tracking-wide text-[10px]">{t("credentials.widget.issueingbody")}</p>
           <p className="font-bold mt-0.5">NIMASA</p>
         </div>
         <div>
@@ -93,7 +93,7 @@ function StatusWidget({ compact = false }: { compact?: boolean }) {
           <p className="font-bold mt-0.5">{t("credentials.widget.categoryValue")}</p>
         </div>
         <div>
-          <p className="font-semibold text-gray-400 uppercase tracking-wide text-[10px]">{t("credentials.widget.verifyAt")}</p>
+          <p className="font-semibold text-gray-400 uppercase tracking-wide text-[10px]">{t("credentials.widget.verifyat")}</p>
           <a
             href={LICENCE.verifyAt}
             target="_blank"

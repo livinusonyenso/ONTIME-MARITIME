@@ -790,113 +790,113 @@
     }
   },
   "credentials": {
-    "badge": "Government-Verified · Internationally Qualified",
-    "title": "Verified Credentials & Professional Certifications",
-    "subtitle": "Ontime Resources Limited operates under government-verified licensing, internationally recognised academic qualifications, and full regulatory compliance — credentials that most Nigerian clearing agents simply do not hold.",
-    "trustStatement": "All credentials listed below are current, active, and verifiable.",
-    "trustLink": "NIMASA Licence SA261009 can be checked directly at www.nimasa.gov.ng",
+    "badge": "政府认证 · 国际资质",
+    "title": "认证证书与职业资格",
+    "subtitle": "准时资源有限公司在政府认证许可、国际认可学术资质和完整合规监管下运营——这些资质是大多数尼日利亚清关代理所不具备的。",
+    "trustStatement": "以下所有证书均为现行有效且可核实。",
+    "trustLink": "NIMASA许可证SA261009可直接在www.nimasa.gov.ng进行验证",
     "hero": {
-      "primaryLabel": "Primary Credential",
-      "title": "NIMASA Registration Licence",
-      "issuer": "Nigerian Maritime Administration and Safety Agency",
-      "verifiedBadge": "Verified Active",
-      "licenceNumber": "Licence Number",
-      "category": "Category",
-      "categoryValue": "Registered Shipping Agent",
-      "status": "Status",
-      "statusValue": "ACTIVE",
-      "issuingBody": "Issuing Body",
-      "authority": "Issued under the Nigerian Maritime Administration and Safety Agency Act 2007 and Merchant Shipping Act 2007.",
-      "verifyBtn": "Verify Online",
-      "downloadBtn": "Download Certificate Copy"
+      "primaryLabel": "主要证书",
+      "title": "NIMASA注册许可证",
+      "issuer": "尼日利亚海事管理与安全局",
+      "verifiedBadge": "已验证有效",
+      "licenceNumber": "许可证编号",
+      "category": "类别",
+      "categoryValue": "注册航运代理",
+      "status": "状态",
+      "statusValue": "有效",
+      "issuingBody": "发证机构",
+      "authority": "依据2007年尼日利亚海事管理与安全局法案及2007年商船法签发。",
+      "verifyBtn": "在线验证",
+      "downloadBtn": "下载证书副本"
     },
     "widget": {
-      "active": "ACTIVE",
-      "licenceNo": "Licence No.",
-      "issuingBody": "Issuing Body",
-      "category": "Category",
-      "categoryValue": "Registered Shipping Agent",
-      "verifyAt": "Verify At",
-      "verify": "Verify"
+      "active": "有效",
+      "licenceNo": "许可证编号",
+      "issuingBody": "发证机构",
+      "category": "类别",
+      "categoryValue": "注册航运代理",
+      "verifyAt": "验证网址",
+      "verify": "验证"
     },
     "qualifications": {
-      "sectionTitle": "Academic & Professional Qualifications",
-      "sectionSubtitle": "Our leadership combines legal expertise in international maritime law with hands-on port operations experience — a combination that directly protects every client instruction we manage.",
-      "whyMatters": "Why This Matters For Your Cargo",
+      "sectionTitle": "学术与职业资质",
+      "sectionSubtitle": "我们的领导团队将国际海事法律专业知识与港口运营实践经验相结合——这一组合直接保障我们管理的每项客户指令。",
+      "whyMatters": "这对您的货物意味着什么",
       "llm-maritime-law": {
-        "tag": "Postgraduate Degree · UK",
-        "title": "LLM International Commercial and Maritime Law",
-        "institution": "Swansea University, United Kingdom",
-        "meta": "Awarded 2010 · School of Law",
-        "subjects": ["International Shipping Law","Charterparty Agreements","Cargo Claims","Maritime Contracts","Trade Finance Law","Bills of Lading","INCOTERMS","Maritime Arbitration"],
-        "relevance": "Every cargo instruction handled by Ontime Resources is managed by a team led by a qualified maritime lawyer. This means your contracts are reviewed correctly, your claims are handled professionally, and your rights are protected at every stage — under Nigerian and international maritime law."
+        "tag": "研究生学位 · 英国",
+        "title": "国际商业与海事法律法学硕士",
+        "institution": "英国斯旺西大学",
+        "meta": "2010年授予 · 法学院",
+        "subjects": ["国际航运法","租船合同","货物索赔","海事合同","贸易融资法","提单","国际贸易术语","海事仲裁"],
+        "relevance": "准时资源有限公司的每项货物指令均由具备海事律师资质的团队负责人管理。这意味着您的合同将得到专业审查，您的索赔将获得妥善处理，您的权益在每个环节都将受到保护——依据尼日利亚及国际海事法律。"
       },
       "cma-conference": {
-        "tag": "International Conference · USA",
-        "title": "CMA Shipping Conference Attendance Certificate",
-        "institution": "CMA Shipping Conference, Stamford, Connecticut",
-        "meta": "2009 · One of the world's most prestigious annual shipping events",
-        "relevance": "The CMA Shipping Conference gathers global shipping executives, shipowners, financiers, and logistics leaders annually. Attendance demonstrates active participation in the international shipping industry at its highest level — not just local market knowledge."
+        "tag": "国际会议 · 美国",
+        "title": "CMA航运会议出席证书",
+        "institution": "CMA航运会议，美国康涅狄格州斯坦福德",
+        "meta": "2009年 · 全球最具声望的年度航运活动之一",
+        "relevance": "CMA航运会议每年汇聚全球航运高管、船东、金融家和物流领袖。出席证明在最高层次积极参与国际航运业——而不仅仅是本地市场知识。"
       }
     },
     "registration": {
-      "sectionTitle": "Corporate Registration & Legal Standing",
+      "sectionTitle": "企业注册与法律地位",
       "cac": {
-        "tag": "Corporate Registration", "title": "Certificate of Incorporation",
-        "issuer": "Corporate Affairs Commission, Federal Republic of Nigeria",
-        "companyName": "Company Name", "regNumber": "Registration Number",
-        "registeredUnder": "Registered Under", "registeredUnderValue": "CAMA — Companies and Allied Matters Act",
-        "status": "Status", "statusValue": "Active",
-        "jurisdiction": "Jurisdiction", "jurisdictionValue": "Federal Republic of Nigeria"
+        "tag": "企业注册", "title": "注册成立证书",
+        "issuer": "尼日利亚联邦共和国企业事务委员会",
+        "companyName": "公司名称", "regNumber": "注册编号",
+        "registeredUnder": "注册依据", "registeredUnderValue": "CAMA——公司及相关事务法",
+        "status": "状态", "statusValue": "有效",
+        "jurisdiction": "司法管辖区", "jurisdictionValue": "尼日利亚联邦共和国"
       },
       "ncs": {
-        "tag": "Regulatory Compliance", "title": "Nigeria Customs Service Compliance",
-        "issuer": "Nigeria Customs Service",
-        "status": "Status", "statusValue": "Recognised Clearing Agent",
-        "statement": "Ontime Resources Limited is a recognised customs clearing agent operating in full compliance with Nigeria Customs Service regulations, tariff classifications, and destination inspection procedures at all Nigerian ports of entry."
+        "tag": "法规合规", "title": "尼日利亚海关服务合规",
+        "issuer": "尼日利亚海关服务",
+        "status": "状态", "statusValue": "认可清关代理",
+        "statement": "准时资源有限公司是经认可的海关清关代理，在尼日利亚所有入境口岸完全遵守尼日利亚海关服务法规、关税分类和目的地查验程序。"
       }
     },
     "badges": {
-      "sectionTitle": "Industry Licences & Professional Affiliations",
-      "statusActive": "Active", "statusInProgress": "Registration in Progress", "statusPending": "Pending",
-      "nimasa":          { "name": "NIMASA Shipping Agent Licence SA261009",      "authority": "NIMASA" },
-      "nimasaAct":       { "name": "NIMASA Act 2007 Compliance",                  "authority": "Federal Govt of Nigeria" },
-      "merchantShipping":{ "name": "Merchant Shipping Act 2007 Registration",     "authority": "Nigerian Maritime Law" },
-      "ncs":             { "name": "Nigeria Customs Service Recognised Agent",    "authority": "Nigeria Customs Service" },
-      "nepc":            { "name": "NEPC Registered Export Facilitator",          "authority": "NEPC Nigeria" },
-      "llm":             { "name": "LLM Maritime Law Qualified Leadership",        "authority": "Swansea University UK" },
-      "cma":             { "name": "CMA Shipping Conference Alumni",               "authority": "CMA Shipping, USA 2009" },
-      "canton":          { "name": "Canton Fair 2026 Registered Buyer & Rep",     "authority": "China Import & Export Fair" }
+      "sectionTitle": "行业许可证与职业认证",
+      "statusActive": "有效", "statusInProgress": "注册中", "statusPending": "待审核",
+      "nimasa":          { "name": "NIMASA航运代理许可证SA261009",      "authority": "NIMASA" },
+      "nimasaAct":       { "name": "NIMASA法案2007合规",                "authority": "尼日利亚联邦政府" },
+      "merchantShipping":{ "name": "商船法2007注册",                    "authority": "尼日利亚海事法" },
+      "ncs":             { "name": "尼日利亚海关服务认可代理",          "authority": "尼日利亚海关服务" },
+      "nepc":            { "name": "NEPC注册出口促进机构",              "authority": "尼日利亚NEPC" },
+      "llm":             { "name": "法学硕士海事法律资质领导层",        "authority": "英国斯旺西大学" },
+      "cma":             { "name": "CMA航运会议校友",                   "authority": "美国CMA航运，2009年" },
+      "canton":          { "name": "2026年广交会注册买家及代表",        "authority": "中国进出口商品交易会" }
     },
     "benefits": {
-      "sectionTitle": "What Our Credentials Mean For You",
+      "sectionTitle": "我们的资质对您意味着什么",
       "legalProtection": {
-        "title": "Your Cargo is Legally Protected",
-        "text": "Our NIMASA licence and LLM in maritime law means every cargo instruction is managed under full legal compliance. If disputes arise with terminal operators, shipping lines, or customs officials, our qualified leadership knows exactly how to protect your interests under Nigerian and international maritime law."
+        "title": "您的货物受法律保护",
+        "text": "我们的NIMASA许可证和海事法律法学硕士学位意味着每项货物指令均在完全法律合规下管理。如与码头运营商、航运公司或海关官员发生纠纷，我们具备资质的领导层确切了解如何依据尼日利亚及国际海事法律维护您的权益。"
       },
       "verifiedAgent": {
-        "title": "You Are Working With a Verified Agent",
-        "text": "NIMASA Licence SA261009 is publicly verifiable at www.nimasa.gov.ng. You are not taking our word for it — you can check our licence status right now, in real time, before you instruct us with a single container. Most Nigerian clearing agents cannot offer this."
+        "title": "您正在与认证代理合作",
+        "text": "NIMASA许可证SA261009可在www.nimasa.gov.ng公开核实。您无需仅凭我们的口头承诺——可在委托我们处理任何集装箱之前，立即实时查验我们的许可证状态。大多数尼日利亚清关代理无法提供这一保障。"
       },
       "international": {
-        "title": "International Standard Operations",
-        "text": "Our MD's LLM from a UK university and participation in the CMA Shipping Conference in the USA means our operations are benchmarked against international standards, not just local practices. You receive the same professional standard you would expect from a clearing agent in London, Singapore, or Shanghai."
+        "title": "国际标准运营",
+        "text": "我们董事总经理在英国大学获得的法学硕士学位及参加美国CMA航运会议的经历，意味着我们的运营以国际标准为基准，而非仅依据本地做法。您将获得与在伦敦、新加坡或上海的清关代理相同的专业服务水准。"
       }
     },
     "transparency": {
-      "title": "Verification & Transparency Statement",
-      "text": "We believe transparency is the foundation of every lasting business relationship. That is why every credential shown on this page is real, current, and independently verifiable. We do not display expired licences. We do not inflate our qualifications. We do not make claims we cannot substantiate.",
-      "facts": "Our LLM was awarded by Swansea University, United Kingdom in 2010. Our company is registered with the Corporate Affairs Commission of Nigeria under RC 7543149. These are facts. Check them.",
-      "verifyBtn": "Verify NIMASA Licence Now"
+      "title": "核实与透明度声明",
+      "text": "我们相信透明度是每段持久商业关系的基础。因此，本页显示的每项证书均真实、现行且可独立核实。我们不展示已过期的许可证，不夸大我们的资质，不提出无法证实的主张。",
+      "facts": "我们的法学硕士由英国斯旺西大学于2010年授予。我们的公司在尼日利亚企业事务委员会注册，注册号为RC 7543149。这些都是事实，可供核实。",
+      "verifyBtn": "立即验证NIMASA许可证"
     },
     "downloads": {
-      "sectionTitle": "Download Our Credentials",
-      "sectionSubtitle": "Official company documents available for download.",
-      "downloadBtn": "Download",
-      "profile":    { "name": "Company Profile",                        "filename": "Ontime_Resources_Limited_Profile_2026.pdf" },
-      "nimasa":     { "name": "NIMASA Licence Copy (Redacted)",          "filename": "NIMASA_Licence_SA261009_Redacted.pdf" },
-      "capability": { "name": "Capability Statement",                    "filename": "Ontime_Capability_Statement_2026.pdf" },
-      "rateCard":   { "name": "Rate Card — Port Charges & Clearing Fees", "filename": "Ontime_Rate_Card_2026.pdf" }
+      "sectionTitle": "下载我们的证书",
+      "sectionSubtitle": "可供下载的官方公司文件。",
+      "downloadBtn": "下载",
+      "profile":    { "name": "公司简介",                         "filename": "Ontime_Resources_Limited_Profile_2026.pdf" },
+      "nimasa":     { "name": "NIMASA许可证副本（脱敏版）",        "filename": "NIMASA_Licence_SA261009_Redacted.pdf" },
+      "capability": { "name": "能力说明书",                        "filename": "Ontime_Capability_Statement_2026.pdf" },
+      "rateCard":   { "name": "收费表——港口费用及清关费",          "filename": "Ontime_Rate_Card_2026.pdf" }
     }
   }
 

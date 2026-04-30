@@ -822,7 +822,12 @@
       "verify": "Verify",
       "expires": "Expires",
       "remaining": "remaining",
-      "verified": "Verified"
+      "verified": "Verified",
+      "category": "Category",
+      "categoryValue": "Registered Shipping Agent",
+      "issueingbody": "Issuing Body",
+      "verifyat": "Verify at"
+
     },
     "qualifications": {
       "sectionTitle": "Academic & Professional Qualifications",
